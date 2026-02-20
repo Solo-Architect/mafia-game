@@ -26,13 +26,18 @@ declare global {
         showPopup: (params: any, callback?: (buttonId: string) => void) => void;
       };
     };
+    Adsonar?: {
+      rewardedVideo: {
+        show: (params: { onReward: () => void }) => void;
+      };
+    };
   }
 }
 
 // ===== КОНФИГ =====
 const SERVER_URL = 'wss://mafia-server-1kb7.onrender.com';
 
-// ===== ТОВАРЫ (20+ штук) =====
+// ===== ТОВАРЫ ЗА ЗВЁЗДЫ =====
 const shopItems = [
   // Роли
   { id: 1, name: '👑 Дон', desc: 'Глава мафии, голос решающий', price: 70, category: 'role' },
@@ -75,7 +80,8 @@ function App() {
   const [tg, setTg] = useState<any>(null);
   const [starsBalance, setStarsBalance] = useState(0);
   const [ownedItems, setOwnedItems] = useState<number[]>([]);
-  const [maxPlayers, setMaxPlayers] = useState<number>(6); // по умолчанию 6
+  const [maxPlayers, setMaxPlayers] = useState<number>(6);
+  const [bonusBalance, setBonusBalance] = useState(0); // бонусы за рекламу
 
   // Инициализация Telegram
   useEffect(() => {
@@ -152,15 +158,39 @@ function App() {
     return () => ws.close();
   }, []);
 
-  // ===== ПОКУПКА ЗА ЗВЁЗДЫ =====
-  const buyItem = (item: typeof shopItems[0]) => {
-    if (!tg) return;
-    if (ownedItems.includes(item.id)) {
-      alert('✅ У тебя уже есть этот товар!');
+  // ===== РЕКЛАМА =====
+  const showRewardedAd = (reward: string) => {
+    if (!window.Adsonar?.rewardedVideo) {
+      alert('Реклама временно недоступна');
       return;
     }
+
+    window.Adsonar.rewardedVideo.show({
+      onReward: () => {
+        if (reward === 'bonus') {
+          setBonusBalance(prev => prev + 50);
+          alert('🎉 +50 бонусных баллов за рекламу!');
+        } else if (reward === 'double') {
+          // Можно добавить двойной голос
+          alert('🎉 Ты получил двойной голос в следующем раунде!');
+        }
+        tg?.HapticFeedback?.notificationOccurred('success');
+      }
+    });
+  };
+
+  // ===== ПРИГЛАСИТЬ ДРУГА =====
+  const inviteFriend = () => {
+    const inviteLink = `https://t.me/share/url?url=https://t.me/твой_бот/игра&text=🎮 Сыграем в мафию? Присоединяйся!`;
+    tg?.openTelegramLink(inviteLink);
+  };
+
+  // ===== ПОКУПКА ЗА ЗВЁЗДЫ =====
+  const buyItem = async (item: typeof shopItems[0]) => {
+    if (!tg) return;
+
     tg.showPopup({
-      title: 'Покупка',
+      title: 'Покупка за звёзды',
       message: `Купить "${item.name}" за ${item.price} ⭐️?\n\n${item.desc}`,
       buttons: [
         { id: 'buy', type: 'default', text: 'Купить' },
@@ -168,6 +198,7 @@ function App() {
       ]
     }, (buttonId: string) => {
       if (buttonId === 'buy') {
+        // Здесь будет реальная оплата через Telegram Stars
         const newOwned = [...ownedItems, item.id];
         setOwnedItems(newOwned);
         localStorage.setItem('ownedItems', JSON.stringify(newOwned));
@@ -180,7 +211,6 @@ function App() {
 
   const createGame = () => {
     if (playerName && socket) {
-      // Отправляем на сервер выбранное количество игроков
       socket.send(JSON.stringify({
         type: 'create',
         playerName,
@@ -362,6 +392,34 @@ function App() {
       cursor: 'pointer',
       fontWeight: 600
     },
+    bonusSection: {
+      display: 'flex',
+      justifyContent: 'space-around',
+      gap: '10px',
+      marginBottom: '20px'
+    },
+    bonusButton: {
+      padding: '12px',
+      background: 'linear-gradient(135deg, #ffaa00, #ffd966)',
+      color: '#0b0e1a',
+      border: 'none',
+      borderRadius: '20px',
+      fontSize: '14px',
+      fontWeight: 'bold',
+      cursor: 'pointer',
+      flex: 1
+    },
+    inviteButton: {
+      padding: '12px',
+      background: '#36c97a',
+      color: 'white',
+      border: 'none',
+      borderRadius: '20px',
+      fontSize: '16px',
+      fontWeight: 'bold',
+      cursor: 'pointer',
+      marginBottom: '20px'
+    },
     shopSection: {
       marginTop: '30px',
       padding: '20px',
@@ -412,7 +470,6 @@ function App() {
       marginBottom: '10px',
       color: '#5f7dff'
     },
-    // Новые стили для выбора количества игроков
     playerCountSelector: {
       display: 'flex',
       gap: '10px',
@@ -567,6 +624,15 @@ function App() {
               <div key={p} style={styles.playerItem}>{p}</div>
             ))}
           </div>
+          {/* Кнопки бонусов во время игры */}
+          <div style={styles.bonusSection}>
+            <button onClick={() => showRewardedAd('bonus')} style={styles.bonusButton}>
+              🎬 +50 бонусов
+            </button>
+            <button onClick={() => showRewardedAd('double')} style={styles.bonusButton}>
+              🎬 Двойной голос
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -577,6 +643,12 @@ function App() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>🕵️ Мафия</h1>
+        
+        {/* Кнопка пригласить друга */}
+        <button onClick={inviteFriend} style={styles.inviteButton}>
+          👥 Пригласить друга (+ бонус)
+        </button>
+
         <div style={styles.mainButtons}>
           <button onClick={() => setScreen('create')} style={styles.createButton}>
             Создать игру
@@ -586,9 +658,19 @@ function App() {
           </button>
         </div>
 
-        {/* Магазин */}
+        {/* Кнопки бонусов на главной */}
+        <div style={styles.bonusSection}>
+          <button onClick={() => showRewardedAd('bonus')} style={styles.bonusButton}>
+            🎬 Заработать бонусы
+          </button>
+          <button onClick={() => showRewardedAd('double')} style={styles.bonusButton}>
+            🎬 Двойной голос
+          </button>
+        </div>
+
+        {/* Магазин за звёзды */}
         <div style={styles.shopSection}>
-          <div style={styles.shopTitle}>⭐️ МАГАЗИН ⭐️</div>
+          <div style={styles.shopTitle}>⭐️ МАГАЗИН ЗВЁЗД ⭐️</div>
           {['role', 'boost', 'skin'].map(cat => {
             const items = shopItems.filter(i => i.category === cat);
             if (!items.length) return null;
