@@ -10,6 +10,7 @@ export default async function handler(req, res) {
     const payload = `${itemId}_${Date.now()}`;
   
     try {
+      // Создаём инвойс через Telegram Bot API
       const response = await fetch(
         `https://api.telegram.org/bot${process.env.BOT_TOKEN}/createInvoiceLink`,
         {
@@ -19,7 +20,7 @@ export default async function handler(req, res) {
             title: name,
             description: description,
             payload: payload,
-            currency: 'XTR',
+            currency: 'XTR', // Telegram Stars
             prices: [{ label: name, amount: price }]
           })
         }

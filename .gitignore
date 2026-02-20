@@ -1,8 +1,32 @@
+# Зависимости
 node_modules
-.env
-.DS_Store
+package-lock.json
+
+# Сборка
 dist
 build
-.vscode
+.vite
+
+# Переменные окружения
+.env
+.env.local
+.env.*.local
+
+# Логи
 *.log
-vite.config.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Редакторы
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
