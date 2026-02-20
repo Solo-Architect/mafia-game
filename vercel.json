@@ -1,7 +1,0 @@
-{
-    "functions": {
-      "api/create-invoice.js": {
-        "runtime": "nodejs18.x"
-      }
-    }
-  }
