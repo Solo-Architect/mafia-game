@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// ===== ТИПЫ =====
 declare global {
   interface Window {
     Telegram?: {
@@ -34,12 +33,9 @@ declare global {
   }
 }
 
-// ===== КОНФИГ =====
 const SERVER_URL = 'wss://mafia-server-1kb7.onrender.com';
 
-// ===== ТОВАРЫ ЗА ЗВЁЗДЫ =====
 const shopItems = [
-  // Роли
   { id: 1, name: '👑 Дон', desc: 'Глава мафии, голос решающий', price: 70, category: 'role' },
   { id: 2, name: '🔍 Шериф', desc: 'Ночью проверяет одного', price: 60, category: 'role' },
   { id: 3, name: '💊 Доктор', desc: 'Может спасти одну ночью', price: 55, category: 'role' },
@@ -48,14 +44,12 @@ const shopItems = [
   { id: 6, name: '🛡️ Телохранитель', desc: 'Защищает игрока', price: 60, category: 'role' },
   { id: 7, name: '⚡ Вигилант', desc: 'Может убить раз за игру', price: 70, category: 'role' },
   { id: 8, name: '🔮 Ясновидящий', desc: 'Узнаёт мафию раз в игру', price: 65, category: 'role' },
-  // Бусты
   { id: 9, name: '🛡️ Защита', desc: 'Неуязвимость на ночь', price: 40, category: 'boost' },
   { id: 10, name: '🗳️ Двойной голос', desc: 'Твой голос считается дважды', price: 45, category: 'boost' },
   { id: 11, name: '⚔️ Месть', desc: 'Убиваешь своего убийцу', price: 55, category: 'boost' },
   { id: 12, name: '💪 Сила', desc: 'Твой голос ломает ничью', price: 50, category: 'boost' },
   { id: 13, name: '🎭 Маскировка', desc: 'Тебя не видит шериф', price: 50, category: 'boost' },
   { id: 14, name: '🌀 Хаос', desc: 'Ночью все ходы случайны', price: 60, category: 'boost' },
-  // Скины
   { id: 15, name: '👻 Невидимка', desc: 'Прозрачный аватар', price: 35, category: 'skin' },
   { id: 16, name: '💀 Череп', desc: 'Стиль мафии', price: 40, category: 'skin' },
   { id: 17, name: '👑 Золотая корона', desc: 'Для дона', price: 50, category: 'skin' },
@@ -81,9 +75,8 @@ function App() {
   const [starsBalance, setStarsBalance] = useState(0);
   const [ownedItems, setOwnedItems] = useState<number[]>([]);
   const [maxPlayers, setMaxPlayers] = useState<number>(6);
-  const [bonusBalance, setBonusBalance] = useState(0); // бонусы за рекламу
+  const [bonusBalance, setBonusBalance] = useState(0);
 
-  // Инициализация Telegram
   useEffect(() => {
     if (window.Telegram?.WebApp) {
       const webapp = window.Telegram.WebApp;
@@ -103,7 +96,6 @@ function App() {
     }
   }, []);
 
-  // WebSocket подключение
   useEffect(() => {
     const ws = new WebSocket(SERVER_URL);
     setSocket(ws);
@@ -158,7 +150,22 @@ function App() {
     return () => ws.close();
   }, []);
 
-  // ===== РЕКЛАМА =====
+  // ===== НОВАЯ ФУНКЦИЯ ПРИГЛАШЕНИЯ =====
+  const inviteFriend = () => {
+    if (!tg) return;
+    
+    const message = `🎮 Бро, нашел крутую игру "Мафия"! 
+    
+Давай сыграем? Там мультиплеер, крутые роли и вообще огонь 🔥
+
+👉 Переходи по ссылке: https://mafia-game-nks8.vercel.app
+
+Жду в игре! 👊`;
+    
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(message)}`);
+    tg.HapticFeedback?.impactOccurred('light');
+  };
+
   const showRewardedAd = (reward: string) => {
     if (!window.Adsonar?.rewardedVideo) {
       alert('Реклама временно недоступна');
@@ -171,7 +178,6 @@ function App() {
           setBonusBalance(prev => prev + 50);
           alert('🎉 +50 бонусных баллов за рекламу!');
         } else if (reward === 'double') {
-          // Можно добавить двойной голос
           alert('🎉 Ты получил двойной голос в следующем раунде!');
         }
         tg?.HapticFeedback?.notificationOccurred('success');
@@ -179,13 +185,6 @@ function App() {
     });
   };
 
-  // ===== ПРИГЛАСИТЬ ДРУГА =====
-  const inviteFriend = () => {
-    const inviteLink = `https://t.me/share/url?url=https://t.me/твой_бот/игра&text=🎮 Сыграем в мафию? Присоединяйся!`;
-    tg?.openTelegramLink(inviteLink);
-  };
-
-  // ===== ПОКУПКА ЗА ЗВЁЗДЫ =====
   const buyItem = async (item: typeof shopItems[0]) => {
     if (!tg) return;
 
@@ -198,7 +197,6 @@ function App() {
       ]
     }, (buttonId: string) => {
       if (buttonId === 'buy') {
-        // Здесь будет реальная оплата через Telegram Stars
         const newOwned = [...ownedItems, item.id];
         setOwnedItems(newOwned);
         localStorage.setItem('ownedItems', JSON.stringify(newOwned));
@@ -256,7 +254,6 @@ function App() {
     }
   };
 
-  // ===== СТИЛИ =====
   const styles = {
     container: {
       padding: '20px',
@@ -494,7 +491,6 @@ function App() {
     }
   };
 
-  // ===== ЭКРАН СОЗДАНИЯ ИГРЫ =====
   if (screen === 'create') {
     return (
       <div style={styles.container}>
@@ -532,7 +528,6 @@ function App() {
     );
   }
 
-  // ===== ЭКРАН ВХОДА =====
   if (screen === 'join') {
     return (
       <div style={styles.container}>
@@ -563,7 +558,6 @@ function App() {
     );
   }
 
-  // ===== ЛОББИ =====
   if (screen === 'lobby') {
     return (
       <div style={styles.container}>
@@ -597,7 +591,6 @@ function App() {
     );
   }
 
-  // ===== ИГРОВОЙ ЭКРАН =====
   if (screen === 'game') {
     return (
       <div style={styles.container}>
@@ -624,7 +617,6 @@ function App() {
               <div key={p} style={styles.playerItem}>{p}</div>
             ))}
           </div>
-          {/* Кнопки бонусов во время игры */}
           <div style={styles.bonusSection}>
             <button onClick={() => showRewardedAd('bonus')} style={styles.bonusButton}>
               🎬 +50 бонусов
@@ -638,15 +630,13 @@ function App() {
     );
   }
 
-  // ===== ГЛАВНЫЙ ЭКРАН =====
   return (
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>🕵️ Мафия</h1>
         
-        {/* Кнопка пригласить друга */}
         <button onClick={inviteFriend} style={styles.inviteButton}>
-          👥 Пригласить друга (+ бонус)
+          👥 Пригласить друга
         </button>
 
         <div style={styles.mainButtons}>
@@ -658,7 +648,6 @@ function App() {
           </button>
         </div>
 
-        {/* Кнопки бонусов на главной */}
         <div style={styles.bonusSection}>
           <button onClick={() => showRewardedAd('bonus')} style={styles.bonusButton}>
             🎬 Заработать бонусы
@@ -668,7 +657,6 @@ function App() {
           </button>
         </div>
 
-        {/* Магазин за звёзды */}
         <div style={styles.shopSection}>
           <div style={styles.shopTitle}>⭐️ МАГАЗИН ЗВЁЗД ⭐️</div>
           {['role', 'boost', 'skin'].map(cat => {
