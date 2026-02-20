@@ -150,7 +150,6 @@ function App() {
     return () => ws.close();
   }, []);
 
-  // ===== НОВАЯ ФУНКЦИЯ ПРИГЛАШЕНИЯ =====
   const inviteFriend = () => {
     if (!tg) return;
     
@@ -188,23 +187,37 @@ function App() {
   const buyItem = async (item: typeof shopItems[0]) => {
     if (!tg) return;
 
-    tg.showPopup({
-      title: 'Покупка за звёзды',
-      message: `Купить "${item.name}" за ${item.price} ⭐️?\n\n${item.desc}`,
-      buttons: [
-        { id: 'buy', type: 'default', text: 'Купить' },
-        { id: 'cancel', type: 'cancel', text: 'Отмена' }
-      ]
-    }, (buttonId: string) => {
-      if (buttonId === 'buy') {
-        const newOwned = [...ownedItems, item.id];
-        setOwnedItems(newOwned);
-        localStorage.setItem('ownedItems', JSON.stringify(newOwned));
-        setStarsBalance(prev => prev + item.price);
-        alert(`✨ Ты купил "${item.name}"!`);
-        tg.HapticFeedback?.notificationOccurred('success');
-      }
-    });
+    try {
+      const response = await fetch('/api/create-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemId: item.id,
+          name: item.name,
+          price: item.price,
+          description: item.desc
+        })
+      });
+
+      const { invoiceLink } = await response.json();
+
+      tg.openInvoice(invoiceLink, (status: string) => {
+        if (status === 'paid') {
+          const newOwned = [...ownedItems, item.id];
+          setOwnedItems(newOwned);
+          localStorage.setItem('ownedItems', JSON.stringify(newOwned));
+          setStarsBalance(prev => prev + item.price);
+          alert(`✨ Ты купил "${item.name}"!`);
+          tg.HapticFeedback?.notificationOccurred('success');
+        } else if (status === 'cancelled' || status === 'failed') {
+          alert('❌ Платёж отменён');
+          tg.HapticFeedback?.notificationOccurred('error');
+        }
+      });
+    } catch (error) {
+      console.error('Ошибка при создании инвойса:', error);
+      alert('Не удалось создать платёж. Попробуй позже.');
+    }
   };
 
   const createGame = () => {
