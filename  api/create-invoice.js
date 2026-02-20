@@ -9,6 +9,10 @@ export default async function handler(req, res) {
     // Уникальный ID для платежа
     const payload = `${itemId}_${Date.now()}`;
   
+    // Для Telegram Stars (XTR) сумма должна быть в наименьших единицах
+    // 1 звезда = 1 единица, поэтому оставляем как есть
+    const amount = price;
+  
     try {
       // Создаём инвойс через Telegram Bot API
       const response = await fetch(
@@ -21,7 +25,7 @@ export default async function handler(req, res) {
             description: description,
             payload: payload,
             currency: 'XTR', // Telegram Stars
-            prices: [{ label: name, amount: price }]
+            prices: [{ label: name, amount: amount }]
           })
         }
       );
@@ -31,11 +35,14 @@ export default async function handler(req, res) {
       if (data.ok) {
         res.json({ invoiceLink: data.result });
       } else {
-        console.error('Telegram API error:', data);
-        res.status(500).json({ error: 'Failed to create invoice' });
+        console.error('❌ Telegram API error:', data);
+        res.status(500).json({ 
+          error: 'Failed to create invoice',
+          details: data 
+        });
       }
     } catch (error) {
-      console.error('Server error:', error);
+      console.error('❌ Server error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
