@@ -1,3 +1,8 @@
-# mafia-game
+# Мафия Вовы
 
-[Edit in StackBlitz next generation editor ⚡️](https://stackblitz.com/~/github.com/Solo-Architect/mafia-game)
+Мультиплеерная игра "Мафия" на React + TypeScript.
+
+## Запуск
+```bash
+npm install
+npm run dev
