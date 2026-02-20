@@ -1,0 +1,25 @@
+{
+  "name": "react-ts-7g8msb",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@types/react": "16.0.31",
+    "@types/react-dom": "16.0.3",
+    "express": "5.2.1",
+    "http": "^0.0.0",
+    "https": "^1.0.0",
+    "react": "19.3.0-canary-2ba30655-20260219",
+    "react-dom": "19.3.0-canary-2ba30655-20260219",
+    "socket.io": "4.8.3",
+    "socket.io-client": "2.5.0"
+  },
+  "scripts": {
+    "start": "react-scripts-ts start",
+    "build": "react-scripts-ts build",
+    "test": "react-scripts-ts test --env=jsdom",
+    "eject": "react-scripts-ts eject"
+  },
+  "devDependencies": {
+    "react-scripts-ts": "latest"
+  }
+}
